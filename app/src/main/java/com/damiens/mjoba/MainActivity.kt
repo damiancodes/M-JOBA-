@@ -1,4 +1,3 @@
-
 package com.damiens.mjoba
 
 import android.os.Bundle
@@ -10,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.damiens.mjoba.Navigation.NavGraph
+import com.damiens.mjoba.Navigation.Screen
 import com.damiens.mjoba.ui.theme.MJobaTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,7 +22,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    NavGraph(navController = navController)
+                    NavGraph(
+                        navController = navController,
+                        startDestination = Screen.Splash.route
+                    )
                 }
             }
         }

@@ -7,6 +7,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.damiens.mjoba.Model.User
+import com.damiens.mjoba.ui.theme.Screens.Authentication.ForgotPasswordScreen
+import com.damiens.mjoba.ui.theme.Screens.Authentication.LoginScreen
+import com.damiens.mjoba.ui.theme.Screens.Authentication.RegisterScreen
 import com.damiens.mjoba.ui.theme.Screens.Booking.BookingScreen
 import com.damiens.mjoba.ui.theme.Screens.CategoryDetails.CategoryDetailsScreen
 import com.damiens.mjoba.ui.theme.Screens.Home.HomeScreen
@@ -17,11 +20,14 @@ import com.damiens.mjoba.ui.theme.Screens.Payment.PaymentConfirmationScreen
 import com.damiens.mjoba.ui.theme.Screens.Profile.EditProfileScreen
 import com.damiens.mjoba.ui.theme.Screens.Profile.UserProfileScreen
 import com.damiens.mjoba.ui.theme.Screens.ServiceProviderDetailsScreen
+import com.damiens.mjoba.ui.theme.Screens.SplashScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
+    object Splash : Screen("splash")
+    object ForgotPassword : Screen("forgot_password")
     object CategoryDetails : Screen("category_details/{categoryId}") {
         fun createRoute(categoryId: String) = "category_details/$categoryId"
     }
@@ -47,14 +53,13 @@ sealed class Screen(val route: String) {
         fun createRoute(providerId: String, serviceId: String, amount: String) =
             "payment-confirmation/$providerId/$serviceId/$amount"
     }
-    // In NavGraph.kt, add these to your Screen sealed class
     object BookingDetails : Screen("booking_details/{bookingId}") {
         fun createRoute(bookingId: String) = "booking_details/$bookingId"
     }
 }
 
 @Composable
-fun NavGraph(navController: NavHostController, startDestination: String = Screen.Home.route) {
+fun NavGraph(navController: NavHostController, startDestination: String = Screen.Splash.route) {
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -69,6 +74,22 @@ fun NavGraph(navController: NavHostController, startDestination: String = Screen
 
         composable(Screen.EditProfile.route) {
             EditProfileScreen(navController = navController)
+        }
+
+        composable(Screen.Login.route) {
+            LoginScreen(navController = navController)
+        }
+
+        composable(Screen.Register.route) {
+            RegisterScreen(navController = navController)
+        }
+
+        composable(Screen.ForgotPassword.route) {
+            ForgotPasswordScreen(navController = navController)
+        }
+
+        composable(Screen.Splash.route) {
+            SplashScreen(navController = navController)
         }
 
         composable(
@@ -149,6 +170,7 @@ fun NavGraph(navController: NavHostController, startDestination: String = Screen
                 amount = amount
             )
         }
+
         composable(Screen.Bookings.route) {
             BookingsListScreen(navController = navController)
         }
