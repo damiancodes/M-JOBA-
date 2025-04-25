@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.damiens.mjoba.Model.User
+import com.damiens.mjoba.util.LocationSelectionField
 import com.damiens.mjoba.util.SampleData
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -180,6 +181,19 @@ fun EditProfileScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // In your form fields section
+                LocationSelectionField(
+                    value = address,
+                    onValueChange = { address = it },
+                    onLocationSelected = { addressText, geoPoint ->
+                        // Store both text address and coordinates
+                        address = addressText
+                        // In a ViewModel, you would save geoPoint to the user's profile
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Account Type Section

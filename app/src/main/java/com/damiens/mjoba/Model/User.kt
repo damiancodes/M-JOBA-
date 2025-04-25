@@ -7,6 +7,7 @@ data class User(
     val phone: String = "",
     val profileImageUrl: String = "",
     val address: String = "",
+    val location: GeoPoint? = null, // Add this field for coordinates
     val isServiceProvider: Boolean = false,
     val dateCreated: Long = System.currentTimeMillis()
 )

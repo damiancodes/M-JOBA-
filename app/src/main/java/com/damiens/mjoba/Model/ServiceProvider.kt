@@ -1,6 +1,5 @@
 package com.damiens.mjoba.Model
 
-
 data class ServiceProvider(
     val userId: String = "",
     val businessName: String = "",
@@ -11,6 +10,7 @@ data class ServiceProvider(
     val isVerified: Boolean = false,
     val isAvailable: Boolean = false,
     val location: GeoPoint? = null,
+    val address: String = "", // Add this field for human-readable address
     val coverImageUrl: String = "",
     val galleryImages: List<String> = emptyList(),
     val services: List<Service> = emptyList()

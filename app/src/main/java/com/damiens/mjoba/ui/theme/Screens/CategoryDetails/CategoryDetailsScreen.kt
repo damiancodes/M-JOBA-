@@ -5,22 +5,21 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.damiens.mjoba.Model.Service
 import com.damiens.mjoba.Model.ServiceCategory
-import com.damiens.mjoba.Model.ServiceProvider
 import com.damiens.mjoba.Navigation.Screen
+import com.damiens.mjoba.ui.theme.SafaricomGreen
+import com.damiens.mjoba.util.SampleData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,9 +27,19 @@ fun CategoryDetailsScreen(
     navController: NavHostController,
     categoryId: String
 ) {
-    // This would come from a ViewModel in a real app
-    val category = getSampleCategory(categoryId)
-    val services = getSampleServices(categoryId)
+    // Get data from SampleData utility class
+    val category = remember { SampleData.getCategory(categoryId) }
+    val providers = remember { SampleData.getServiceProvidersByCategory(categoryId) }
+
+    // Create a list of services from all providers in this category
+    val services = remember {
+        providers.flatMap { provider ->
+            provider.services.filter { it.categoryId == categoryId }
+        }.ifEmpty {
+            // Fallback to sample services if no services found in providers
+            getSampleServices(categoryId)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -43,8 +52,39 @@ fun CategoryDetailsScreen(
                             contentDescription = "Go back"
                         )
                     }
+                },
+                actions = {
+                    // Add map view button
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screen.NearbyProviders.createRoute(categoryId))
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Map,
+                            contentDescription = "Map View"
+                        )
+                    }
+
+                    // Add filter button
+                    IconButton(onClick = { /* TODO: Implement filtering */ }) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "Filter"
+                        )
+                    }
                 }
             )
+        },
+        floatingActionButton = {
+            // Add toggle view FAB
+            FloatingActionButton(
+                onClick = { /* TODO: Toggle between list and grid view */ },
+                containerColor = SafaricomGreen,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(Icons.Default.ViewList, "Toggle View")
+            }
         }
     ) { paddingValues ->
         Column(
@@ -61,12 +101,25 @@ fun CategoryDetailsScreen(
             )
 
             // Services in this category
-            Text(
-                text = "Available Providers",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Available Providers",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "${services.size} providers",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -113,13 +166,14 @@ fun ServiceProviderCard(
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     // Placeholder for image
                     Text(
-                        text = "Service Image",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = service.name.first().toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = SafaricomGreen,
                         modifier = Modifier.padding(4.dp)
                     )
                 }
@@ -168,27 +222,16 @@ fun ServiceProviderCard(
             }
 
             Text(
-                text = "Ksh ${service.price}",
+                text = "Ksh ${service.price.toInt()}",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = SafaricomGreen
             )
         }
     }
 }
 
-// Sample data functions - in a real app, this would come from a repository
-private fun getSampleCategory(categoryId: String): ServiceCategory {
-    return when (categoryId) {
-        "101" -> ServiceCategory(id = "101", name = "House Cleaning", icon = "", description = "Professional house cleaning services for homes of all sizes. Get your house spotless with our trusted cleaning experts.")
-        "201" -> ServiceCategory(id = "201", name = "Women's Hair", icon = "", description = "Professional hair styling, cutting, coloring, and treatment services for women.")
-        "301" -> ServiceCategory(id = "301", name = "Plumbing", icon = "", description = "Expert plumbers to fix leaks, install fixtures, and handle all your plumbing needs.")
-        "401" -> ServiceCategory(id = "401", name = "Women's Clothing", icon = "", description = "Quality second-hand women's clothing from trusted wholesalers.")
-        "501" -> ServiceCategory(id = "501", name = "Kitchen Supplies", icon = "", description = "Wholesale kitchen supplies including utensils, cookware, and appliances.")
-        else -> ServiceCategory(id = categoryId, name = "Category", icon = "", description = "Category description.")
-    }
-}
-
+// Sample data function for fallback - in a real app, this would come from a repository
 private fun getSampleServices(categoryId: String): List<Service> {
     return when (categoryId) {
         "101" -> listOf(
@@ -212,4 +255,3 @@ private fun getSampleServices(categoryId: String): List<Service> {
         )
     }
 }
-

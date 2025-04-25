@@ -13,18 +13,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.damiens.mjoba.Model.Service
 import com.damiens.mjoba.Model.ServiceProvider
 import com.damiens.mjoba.Navigation.Screen
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-
-
+import com.damiens.mjoba.util.SampleData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,19 +33,48 @@ fun PaymentScreen(
     providerId: String,
     serviceId: String,
     date: String,
-    time: String
+    time: String,
+    viewModel: PaymentViewModel = viewModel()
 ) {
-    // In a real app, these would come from a ViewModel
-    val service = getSampleService(serviceId)
-    val provider = getSampleProvider(providerId)
+    // Get service and provider data
+    val service = SampleData.getService(serviceId)
+    val provider = SampleData.getServiceProvider(providerId)
 
     val totalAmount = service.price + (service.price * 0.05) // 5% platform fee
 
     var phoneNumber by remember { mutableStateOf("") }
-    var isProcessing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // Collect UI state from ViewModel
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Handle UI state changes
+    LaunchedEffect(uiState) {
+        when (val currentState = uiState) {
+            is PaymentUiState.Success -> {
+                // Navigate to confirmation screen
+                navController.navigate(
+                    Screen.PaymentConfirmation.createRoute(
+                        providerId = providerId,
+                        serviceId = serviceId,
+                        amount = totalAmount.toInt().toString()
+                    )
+                )
+
+                // Reset the state to avoid navigation issues when returning
+                viewModel.resetState()
+            }
+
+            is PaymentUiState.Error -> {
+                errorMessage = currentState.message
+            }
+
+            else -> { /* No action needed for Initial and Loading states */ }
+        }
+    }
+
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -298,7 +327,7 @@ fun PaymentScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Pay Button
+            // Pay Button - Updated to use ViewModel
             Button(
                 onClick = {
                     // Validate phone number format first
@@ -312,24 +341,20 @@ fun PaymentScreen(
                         return@Button
                     }
 
-                    // In a real app, this would call the M-Pesa API
-                    isProcessing = true
-
-                    // Simulate API call delay
-                    // In a real app, replace with actual M-Pesa API integration
-                    // For now, just navigate to confirmation after a delay
-                    navController.navigate(
-                        Screen.PaymentConfirmation.createRoute(
-                            providerId = providerId,
-                            serviceId = serviceId,
-                            amount = totalAmount.toInt().toString()
-                        )
+                    // Process payment via ViewModel
+                    viewModel.processPayment(
+                        phoneNumber = phoneNumber,
+                        amount = totalAmount.toInt(),
+                        providerId = providerId,
+                        serviceId = serviceId,
+                        date = date,
+                        time = time
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isProcessing
+                enabled = uiState != PaymentUiState.Loading
             ) {
-                if (isProcessing) {
+                if (uiState == PaymentUiState.Loading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary,
@@ -348,56 +373,12 @@ fun PaymentScreen(
             OutlinedButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isProcessing
+                enabled = uiState != PaymentUiState.Loading
             ) {
                 Text("Cancel")
             }
 
             Spacer(modifier = Modifier.height(32.dp))
         }
-    }
-}
-
-// Sample data functions - in a real app, these would come from a repository
-private fun getSampleService(serviceId: String): Service {
-    return when (serviceId) {
-        "1001" -> Service(id = "1001", categoryId = "101", providerId = "2001", name = "Basic House Cleaning", description = "General cleaning of your home", price = 1500.0, estimatedDuration = 120)
-        "2001" -> Service(id = "2001", categoryId = "201", providerId = "3001", name = "Hair Styling", description = "Professional styling for all occasions", price = 1000.0, estimatedDuration = 60)
-        else -> Service(id = serviceId, categoryId = "101", providerId = "2001", name = "Service", description = "Service description", price = 1000.0, estimatedDuration = 60)
-    }
-}
-
-private fun getSampleProvider(providerId: String): ServiceProvider {
-    return when (providerId) {
-        "2001" -> ServiceProvider(
-            userId = "u2001",
-            businessName = "CleanHome Services",
-            serviceCategories = listOf("101"),
-            description = "We provide professional cleaning services for homes, offices and commercial spaces.",
-            rating = 4.8f,
-            reviewCount = 124,
-            isVerified = true,
-            isAvailable = true
-        )
-        "3001" -> ServiceProvider(
-            userId = "u3001",
-            businessName = "Glamour Hair Salon",
-            serviceCategories = listOf("201"),
-            description = "Professional hair styling for all occasions.",
-            rating = 4.6f,
-            reviewCount = 78,
-            isVerified = true,
-            isAvailable = true
-        )
-        else -> ServiceProvider(
-            userId = "u${providerId.substring(1)}",
-            businessName = "Service Provider $providerId",
-            serviceCategories = listOf("101", "201", "301"),
-            description = "Professional service provider with years of experience.",
-            rating = 4.0f,
-            reviewCount = 50,
-            isVerified = true,
-            isAvailable = true
-        )
     }
 }

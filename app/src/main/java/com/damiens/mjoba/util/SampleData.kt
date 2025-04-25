@@ -56,6 +56,7 @@ object SampleData {
         }
     }
 
+
     fun getService(serviceId: String): Service {
         return when (serviceId) {
             "1001" -> Service(id = "1001", categoryId = "101", providerId = "2001", name = "Basic House Cleaning", description = "General cleaning of your home", price = 1500.0, estimatedDuration = 120)
@@ -91,6 +92,38 @@ object SampleData {
             ),
             // Add more bookings here
         ).find { it.id == bookingId }
+    }
+    // In SampleData.kt
+    fun getServiceProvidersByCategory(categoryId: String): List<ServiceProvider> {
+        // This is a sample implementation - in a real app this would query your database
+        return when (categoryId) {
+            "101" -> listOf( // House Cleaning
+                ServiceProvider(
+                    userId = "2001",
+                    businessName = "CleanHome Services",
+                    serviceCategories = listOf("101"),
+                    description = "Professional cleaning services for homes and offices",
+                    rating = 4.8f,
+                    reviewCount = 124,
+                    isVerified = true,
+                    isAvailable = true
+                ),
+                // Other providers...
+            )
+            // Other categories...
+            else -> listOf(
+                ServiceProvider(
+                    userId = "5001",
+                    businessName = "General Service Provider",
+                    serviceCategories = listOf(categoryId),
+                    description = "Quality services for your needs",
+                    rating = 4.2f,
+                    reviewCount = 27,
+                    isVerified = false,
+                    isAvailable = true
+                )
+            )
+        }
     }
 }
 

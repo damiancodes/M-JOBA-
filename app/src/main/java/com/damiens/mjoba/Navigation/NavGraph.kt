@@ -13,6 +13,7 @@ import com.damiens.mjoba.ui.theme.Screens.Authentication.RegisterScreen
 import com.damiens.mjoba.ui.theme.Screens.Booking.BookingScreen
 import com.damiens.mjoba.ui.theme.Screens.CategoryDetails.CategoryDetailsScreen
 import com.damiens.mjoba.ui.theme.Screens.Home.HomeScreen
+import com.damiens.mjoba.ui.theme.Screens.Map.NearbyProvidersScreen
 import com.damiens.mjoba.ui.theme.Screens.Orders.BookingDetailsScreen
 import com.damiens.mjoba.ui.theme.Screens.Orders.BookingsListScreen
 import com.damiens.mjoba.ui.theme.Screens.Payment.PaymentScreen
@@ -37,6 +38,7 @@ sealed class Screen(val route: String) {
     object BookService : Screen("book_service/{serviceId}") {
         fun createRoute(serviceId: String) = "book_service/$serviceId"
     }
+
     object Profile : Screen("profile")
     object EditProfile : Screen("edit-profile") {
         fun createRoute() = "edit-profile"
@@ -55,6 +57,9 @@ sealed class Screen(val route: String) {
     }
     object BookingDetails : Screen("booking_details/{bookingId}") {
         fun createRoute(bookingId: String) = "booking_details/$bookingId"
+    }
+    object NearbyProviders : Screen("nearby_providers/{categoryId}") {
+        fun createRoute(categoryId: String) = "nearby_providers/$categoryId"
     }
 }
 
@@ -173,6 +178,15 @@ fun NavGraph(navController: NavHostController, startDestination: String = Screen
 
         composable(Screen.Bookings.route) {
             BookingsListScreen(navController = navController)
+        }
+        composable(
+            route = Screen.NearbyProviders.route,
+            arguments = listOf(
+                navArgument("categoryId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
+            NearbyProvidersScreen(navController = navController, categoryId = categoryId)
         }
 
         composable(
