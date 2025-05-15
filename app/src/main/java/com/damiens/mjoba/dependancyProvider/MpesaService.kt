@@ -1,9 +1,7 @@
-
-package com.damiens.mjoba.Data.remote
+package com.damiens.mjoba.dependancyProvider
 
 import android.util.Base64
 import android.util.Log
-import androidx.compose.material3.ExperimentalMaterial3Api
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

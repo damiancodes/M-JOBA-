@@ -8,6 +8,9 @@ data class Booking(
     val serviceId: String = "",
     val date: String = "",
     val time: String = "",
+    val location: String = "",                   // Add this field
+    val contactPhone: String = "",               // Add this field
+    val specialInstructions: String = "",
     val status: BookingStatus = BookingStatus.PENDING,
     val totalAmount: Double = 0.0,
     val paymentStatus: PaymentStatus = PaymentStatus.PENDING,

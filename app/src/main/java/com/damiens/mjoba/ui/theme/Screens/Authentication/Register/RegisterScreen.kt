@@ -1,5 +1,6 @@
 package com.damiens.mjoba.ui.theme.Screens.Authentication
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -10,19 +11,24 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.damiens.mjoba.Navigation.Screen
+import com.damiens.mjoba.ViewModel.AuthState
+import com.damiens.mjoba.ViewModel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: AuthViewModel = viewModel()
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -33,10 +39,34 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
-    var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-
     var isServiceProvider by remember { mutableStateOf(false) }
+
+    // Get auth state from ViewModel
+    val authState by viewModel.authState.collectAsState()
+    val context = LocalContext.current
+
+    // Handle auth state changes
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthState.Authenticated -> {
+                // User registered and authenticated successfully, navigate to Home
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Register.route) { inclusive = true }
+                }
+            }
+            is AuthState.Error -> {
+                // Show error message
+                errorMessage = (authState as AuthState.Error).message
+            }
+            is AuthState.Loading -> {
+                // Loading state is handled by the UI
+            }
+            else -> {
+                // Other states don't need handling here
+            }
+        }
+    }
 
     val scrollState = rememberScrollState()
 
@@ -266,19 +296,15 @@ fun RegisterScreen(
                             errorMessage = "Passwords do not match"
                         }
                         else -> {
-                            isLoading = true
-                            // TODO: Replace with actual registration
-                            // For now, simulate registration and navigate to Home
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Register.route) { inclusive = true }
-                            }
+                            // Call Firebase Registration via ViewModel
+                            viewModel.register(name, email, phone, password, isServiceProvider)
                         }
                     }
                 },
-                enabled = !isLoading,
+                enabled = authState !is AuthState.Loading,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (isLoading) {
+                if (authState is AuthState.Loading) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(24.dp),
@@ -311,4 +337,3 @@ fun RegisterScreen(
         }
     }
 }
-

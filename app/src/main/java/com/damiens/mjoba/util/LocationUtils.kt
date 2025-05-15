@@ -4,6 +4,7 @@ import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -14,10 +15,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.damiens.mjoba.Data.AppLocationRepository
+import com.damiens.mjoba.Data.LocationData
 import com.damiens.mjoba.Model.GeoPoint
 import com.google.android.gms.maps.model.LatLng
 import java.util.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import kotlinx.coroutines.withContext
 
 // Data class for location suggestions
@@ -36,6 +42,7 @@ fun LocationSelectionField(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var showSuggestions by remember { mutableStateOf(false) }
     var suggestions by remember { mutableStateOf(listOf<LocationSuggestion>()) }
     var isSearching by remember { mutableStateOf(false) }
@@ -48,10 +55,12 @@ fun LocationSelectionField(
                 // When user types, fetch location suggestions
                 if (it.length > 2) {
                     isSearching = true
-                    fetchLocationSuggestions(context, it) { results ->
-                        suggestions = results
-                        showSuggestions = results.isNotEmpty()
-                        isSearching = false
+                    coroutineScope.launch {
+                        fetchLocationSuggestions(context, it) { results ->
+                            suggestions = results
+                            showSuggestions = results.isNotEmpty()
+                            isSearching = false
+                        }
                     }
                 } else {
                     showSuggestions = false
@@ -83,11 +92,26 @@ fun LocationSelectionField(
                             suggestion = suggestion,
                             onClick = {
                                 onValueChange(suggestion.name)
-                                // Convert LatLng to GeoPoint and save
+
+                                // Create a LocationData object and save to repository
+                                val locationData = LocationData(
+                                    displayName = suggestion.name,
+                                    address = suggestion.description,
+                                    geoPoint = GeoPoint(
+                                        suggestion.latLng.latitude,
+                                        suggestion.latLng.longitude
+                                    )
+                                )
+
+                                // Update the AppLocationRepository
+                                AppLocationRepository.updateLocation(locationData)
+
+                                // Also call the onLocationSelected callback
                                 onLocationSelected(
                                     suggestion.name,
                                     GeoPoint(suggestion.latLng.latitude, suggestion.latLng.longitude)
                                 )
+
                                 showSuggestions = false
                             }
                         )
@@ -136,11 +160,11 @@ fun LocationSuggestionItem(
 }
 
 // Function to fetch location suggestions based on search text
-fun fetchLocationSuggestions(
+suspend fun fetchLocationSuggestions(
     context: Context,
     query: String,
     callback: (List<LocationSuggestion>) -> Unit
-) {
+) = withContext(Dispatchers.IO) {
     // For a real app, this would use Google Places API
     // For now, we'll use Geocoder with some common Kenyan locations
 
@@ -151,39 +175,71 @@ fun fetchLocationSuggestions(
         query
     }
 
-    // Use Geocoder to get suggestions
-    val geocoder = Geocoder(context, Locale.getDefault())
-
     try {
+        // Use Geocoder to get suggestions
+        val geocoder = Geocoder(context, Locale.getDefault())
+        val suggestions = mutableListOf<LocationSuggestion>()
+
         // For Android 33+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            geocoder.getFromLocationName(searchQuery, 5) { addresses ->
-                val suggestions = addresses.mapNotNull { address ->
-                    createSuggestionFromAddress(address)
+            // Using continuation passing style for newer Android versions
+            val result = suspendCancellableCoroutine<List<Address>> { continuation ->
+                geocoder.getFromLocationName(searchQuery, 5) { addresses ->
+                    continuation.resume(addresses)
                 }
-                callback(suggestions)
+            }
+
+            // Process results
+            val locationSuggestions = result.mapNotNull { createSuggestionFromAddress(it) }
+
+            if (locationSuggestions.isEmpty()) {
+                withContext(Dispatchers.Main) {
+                    callback(getCommonKenyanLocations(query))
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    callback(locationSuggestions)
+                }
             }
         } else {
             // For older Android versions
+            @Suppress("DEPRECATION")
             val addresses = geocoder.getFromLocationName(searchQuery, 5)
-            val suggestions = addresses?.mapNotNull { address ->
-                createSuggestionFromAddress(address)
-            } ?: emptyList()
-            callback(suggestions)
+            suggestions.addAll(addresses?.mapNotNull { createSuggestionFromAddress(it) } ?: emptyList())
+
+            withContext(Dispatchers.Main) {
+                if (suggestions.isEmpty()) {
+                    // Fallback to common locations if no results
+                    callback(getCommonKenyanLocations(query))
+                } else {
+                    callback(suggestions)
+                }
+            }
         }
     } catch (e: Exception) {
-        // Fallback to common Kenyan locations if geocoding fails
-        val commonLocations = listOf(
-            LocationSuggestion("Kilimani", "Nairobi", LatLng(-1.287, 36.781)),
-            LocationSuggestion("Westlands", "Nairobi", LatLng(-1.267, 36.803)),
-            LocationSuggestion("Lavington", "Nairobi", LatLng(-1.275, 36.769)),
-            LocationSuggestion("Githurai", "Nairobi", LatLng(-1.219, 36.909)),
-            LocationSuggestion("Karen", "Nairobi", LatLng(-1.321, 36.716))
-        ).filter {
-            it.name.contains(query, ignoreCase = true) ||
-                    it.description.contains(query, ignoreCase = true)
+        Log.e("LocationUtils", "Error fetching suggestions: ${e.message}")
+        withContext(Dispatchers.Main) {
+            // Fallback to common Kenyan locations if geocoding fails
+            callback(getCommonKenyanLocations(query))
         }
-        callback(commonLocations)
+    }
+}
+
+private fun getCommonKenyanLocations(query: String): List<LocationSuggestion> {
+    return listOf(
+        LocationSuggestion("Kilimani", "Nairobi, Kenya", LatLng(-1.287, 36.781)),
+        LocationSuggestion("Westlands", "Nairobi, Kenya", LatLng(-1.267, 36.803)),
+        LocationSuggestion("Lavington", "Nairobi, Kenya", LatLng(-1.275, 36.769)),
+        LocationSuggestion("Githurai", "Nairobi, Kenya", LatLng(-1.219, 36.909)),
+        LocationSuggestion("Karen", "Nairobi, Kenya", LatLng(-1.321, 36.716)),
+        LocationSuggestion("Kileleshwa", "Nairobi, Kenya", LatLng(-1.280, 36.777)),
+        LocationSuggestion("Ngong Road", "Nairobi, Kenya", LatLng(-1.299, 36.782)),
+        LocationSuggestion("Eastleigh", "Nairobi, Kenya", LatLng(-1.271, 36.858)),
+        LocationSuggestion("Mombasa Road", "Nairobi, Kenya", LatLng(-1.319, 36.850)),
+        LocationSuggestion("CBD", "Nairobi, Kenya", LatLng(-1.284, 36.824))
+    ).filter {
+        it.name.contains(query, ignoreCase = true) ||
+                it.description.contains(query, ignoreCase = true)
     }
 }
 
@@ -225,15 +281,20 @@ suspend fun geocodeAddress(context: Context, address: String): GeoPoint? = withC
                     GeoPoint(it.latitude, it.longitude)
                 }
             }
+            // Wait for the result (not ideal but necessary with the callback API)
+            // In a real app, you'd use a proper async approach
+            Thread.sleep(1000)
             return@withContext result
         } else {
+            @Suppress("DEPRECATION")
             val addresses = geocoder.getFromLocationName(fullAddress, 1)
             return@withContext addresses?.firstOrNull()?.let {
                 GeoPoint(it.latitude, it.longitude)
             }
         }
     } catch (e: Exception) {
-        return@withContext null
+        Log.e("LocationUtils", "Error geocoding address: ${e.message}")
+        // Return a default location for Nairobi if geocoding fails
+        return@withContext GeoPoint(-1.286389, 36.817223)
     }
 }
-

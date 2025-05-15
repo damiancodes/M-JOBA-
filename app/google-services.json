@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "275109773251",
+    "project_id": "mjoba-3daad",
+    "storage_bucket": "mjoba-3daad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:275109773251:android:96d2ab77a925247f358776",
+        "android_client_info": {
+          "package_name": "com.damiens.mjoba"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-Jpw6ZzTlhHb-IcblaYC2eeHOmcuBrdA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

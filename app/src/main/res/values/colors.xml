@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Original colors -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -7,4 +8,11 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Safaricom colors -->
+    <color name="safaricom_green">#00BD46</color>
+    <color name="safaricom_dark_green">#009939</color>
+    <color name="safaricom_light_green">#7DDFA8</color>
+    <color name="safaricom_background">#F5F5F5</color>
+    <color name="safaricom_error">#D32F2F</color>
 </resources>

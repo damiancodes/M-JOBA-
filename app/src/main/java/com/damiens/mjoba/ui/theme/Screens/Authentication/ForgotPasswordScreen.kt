@@ -9,21 +9,46 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.damiens.mjoba.ViewModel.AuthState
+import com.damiens.mjoba.ViewModel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: AuthViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var resetSent by remember { mutableStateOf(false) }
+
+    // Get auth state from ViewModel
+    val authState by viewModel.authState.collectAsState()
+    val context = LocalContext.current
+
+    // Handle auth state changes
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthState.PasswordResetSent -> {
+                // Password reset email sent successfully
+                resetSent = true
+            }
+            is AuthState.Error -> {
+                // Show error message
+                errorMessage = (authState as AuthState.Error).message
+            }
+            else -> {
+                // Other states don't need handling here
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -109,18 +134,15 @@ fun ForgotPasswordScreen(
                                     errorMessage = "Please enter a valid email"
                                 }
                                 else -> {
-                                    isLoading = true
-                                    // TODO: Replace with actual password reset
-                                    // For now, simulate password reset
-                                    resetSent = true
-                                    isLoading = false
+                                    // Call Firebase password reset via ViewModel
+                                    viewModel.resetPassword(email)
                                 }
                             }
                         },
-                        enabled = !isLoading,
+                        enabled = authState !is AuthState.Loading,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        if (isLoading) {
+                        if (authState is AuthState.Loading) {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(24.dp),
@@ -167,7 +189,11 @@ fun ForgotPasswordScreen(
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
-                        onClick = { navController.popBackStack() },
+                        onClick = {
+                            // Reset the ViewModel state and navigate back
+                            viewModel.resetState()
+                            navController.popBackStack()
+                        },
                         modifier = Modifier.fillMaxWidth(0.7f)
                     ) {
                         Text("Back to Login")
@@ -177,4 +203,3 @@ fun ForgotPasswordScreen(
         }
     }
 }
-

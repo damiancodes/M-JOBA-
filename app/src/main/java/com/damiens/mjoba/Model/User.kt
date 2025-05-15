@@ -9,5 +9,6 @@ data class User(
     val address: String = "",
     val location: GeoPoint? = null, // Add this field for coordinates
     val isServiceProvider: Boolean = false,
-    val dateCreated: Long = System.currentTimeMillis()
+    val dateCreated: Long = System.currentTimeMillis(),
+    val isAdmin: Boolean = false
 )

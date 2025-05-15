@@ -5,12 +5,10 @@ package com.damiens.mjoba.ui.theme.Screens.Payment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.damiens.mjoba.Data.PaymentRepository
-import com.damiens.mjoba.Data.remote.MpesaResult
+import com.damiens.mjoba.dependancyProvider.MpesaResult
 import com.damiens.mjoba.Model.Booking
 import com.damiens.mjoba.Model.BookingStatus
 import com.damiens.mjoba.Model.PaymentStatus
-import com.damiens.mjoba.Model.Service
-import com.damiens.mjoba.Model.ServiceProvider
 import com.damiens.mjoba.util.SampleData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.MJoba" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Base application theme -->
+    <style name="Theme.MJoba" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/safaricom_green</item>
+        <item name="colorPrimaryVariant">@color/safaricom_dark_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/safaricom_dark_green</item>
+        <item name="colorSecondaryVariant">@color/safaricom_light_green</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+    </style>
 </resources>

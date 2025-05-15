@@ -1,4 +1,3 @@
-
 package com.damiens.mjoba.ui.theme.Screens
 
 import androidx.compose.foundation.background
@@ -9,19 +8,25 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.damiens.mjoba.Data.AppLocationRepository
+import com.damiens.mjoba.Data.LocationRepository
 import com.damiens.mjoba.Model.Service
 import com.damiens.mjoba.Model.ServiceProvider
 import com.damiens.mjoba.Navigation.Screen
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.VerifiedUser
+import com.damiens.mjoba.ui.theme.SafaricomGreen
 import com.damiens.mjoba.util.SampleData
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +39,12 @@ fun ServiceProviderDetailsScreen(
     val provider = getSampleProvider(providerId)
     val services = getSampleProviderServices(providerId)
 
+    // Get location data from AppLocationRepository
+    val selectedLocation by AppLocationRepository.selectedLocation.collectAsState()
+
+    // Context for location repository
+    val context = LocalContext.current
+    val locationRepository = remember { LocationRepository(context) }
 
     Scaffold(
         topBar = {
@@ -160,23 +171,97 @@ fun ServiceProviderDetailsScreen(
                         )
                     }
 
-                    // Location
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                    // Location Card - Updated with AppLocationRepository
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.LocationOn,
+                                        contentDescription = null,
+                                        tint = SafaricomGreen
+                                    )
 
-                        Text(
-                            text = "2.3 km away", // This would be calculated
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = "Your Location",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                }
+
+                                TextButton(
+                                    onClick = { navController.navigate(Screen.LocationSelection.createRoute()) }
+                                ) {
+                                    Text("Change", color = SafaricomGreen)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            // Display current location or prompt to set one
+                            selectedLocation?.let { location ->
+                                Text(
+                                    text = location.displayName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+
+                                Text(
+                                    text = location.address,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                // Calculate and show distance if provider location is available
+                                provider.location?.let { providerLocation ->
+                                    val distance = locationRepository.calculateDistance(
+                                        location.geoPoint,
+                                        providerLocation
+                                    )
+                                    val distanceText = locationRepository.getDistanceText(distance)
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.DirectionsCar,
+                                            contentDescription = null,
+                                            tint = SafaricomGreen,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+
+                                        Spacer(modifier = Modifier.width(4.dp))
+
+                                        Text(
+                                            text = distanceText,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Medium,
+                                            color = SafaricomGreen
+                                        )
+                                    }
+                                }
+                            } ?: run {
+                                Text(
+                                    text = "Location not set",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Text(
+                                    text = "Set your location to see distance",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
                     }
 
                     // Description
@@ -453,4 +538,3 @@ private fun getSampleProviderServices(providerId: String): List<Service> {
         )
     }
 }
-

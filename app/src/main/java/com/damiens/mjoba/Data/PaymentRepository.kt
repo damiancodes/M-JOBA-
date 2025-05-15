@@ -2,8 +2,8 @@
 // Repository implementation for payment-related operations
 package com.damiens.mjoba.Data
 
-import com.damiens.mjoba.Data.remote.MpesaResult
-import com.damiens.mjoba.Data.remote.MpesaService
+import com.damiens.mjoba.dependancyProvider.MpesaResult
+import com.damiens.mjoba.dependancyProvider.MpesaService
 import com.damiens.mjoba.Model.Booking
 import com.damiens.mjoba.Model.BookingStatus
 import com.damiens.mjoba.Model.PaymentStatus

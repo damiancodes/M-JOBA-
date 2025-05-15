@@ -12,22 +12,41 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.widget.Toast
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.ui.platform.LocalContext
+import com.damiens.mjoba.ViewModel.CategoryViewModel
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.damiens.mjoba.Model.User
 import com.damiens.mjoba.Navigation.Screen
+import com.damiens.mjoba.R
+import com.damiens.mjoba.ViewModel.AuthViewModel
+import com.damiens.mjoba.ui.theme.SafaricomGreen
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
     navController: NavHostController,
-    userId: String? = null // If null, show current user's profile
+    userId: String? = null, // If null, show current user's profile
+    authViewModel: AuthViewModel = viewModel()
 ) {
-    // This would come from a ViewModel in a real app
-    val user = getSampleUser(userId)
+    // Get current user from ViewModel
+    val currentUser by authViewModel.currentUser.collectAsState()
+
+    // State for developer options dialog
+    var showDevOptionsDialog by remember { mutableStateOf(false) }
+
+    // This would eventually come from Firebase
+    val user = currentUser ?: getSampleUser(userId)
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -62,21 +81,36 @@ fun UserProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Profile picture
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .padding(4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // This would be an actual image in a real app
-                        Text(
-                            text = user.name.first().toString(),
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onPrimary
+                    // Profile picture (now using AsyncImage)
+                    if (user.profileImageUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(user.profileImageUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Profile Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
                         )
+                    } else {
+                        // Fallback to app logo or initials if no profile image
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                                .padding(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = R.drawable.mjoblogo,
+                                contentDescription = "Profile Logo",
+                                modifier = Modifier.size(80.dp)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -93,7 +127,7 @@ fun UserProfileScreen(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Surface(
-                            color = MaterialTheme.colorScheme.secondary,
+                            color = SafaricomGreen,
                             shape = MaterialTheme.shapes.small
                         ) {
                             Text(
@@ -191,6 +225,7 @@ fun UserProfileScreen(
                 modifier = Modifier.clickable { navController.navigate(Screen.Bookings.route) }
             )
 
+
             // If the user is a service provider, show dashboard option
             if (user.isServiceProvider) {
                 Divider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -201,21 +236,62 @@ fun UserProfileScreen(
                     leadingContent = {
                         Icon(
                             imageVector = Icons.Default.Dashboard,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     },
                     trailingContent = {
-                        IconButton(onClick = { /* TODO: Navigate to provider dashboard */ }) {
+                        IconButton(onClick = {
+                            // Navigate to provider dashboard
+                            navController.navigate(Screen.ProviderDashboard.route)
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.ChevronRight,
                                 contentDescription = "View Dashboard"
                             )
                         }
                     },
-                    modifier = Modifier.clickable { /* TODO: Navigate to provider dashboard */ }
+                    modifier = Modifier.clickable {
+                        // Navigate to the provider dashboard
+                        navController.navigate(Screen.ProviderDashboard.route)
+                    }
                 )
             }
+            else {
+                // Option to become a provider for regular users
+                Divider(modifier = Modifier.padding(horizontal = 16.dp))
 
+                ListItem(
+                    headlineContent = { Text("Become a Service Provider") },
+                    supportingContent = { Text("Offer your services and earn money") },
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Default.WorkOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingContent = {
+                        IconButton(onClick = {
+                            // Update user to be a service provider
+                            authViewModel.updateUserProfile(isServiceProvider = true)
+                            // Navigate to provider dashboard
+                            navController.navigate(Screen.ProviderDashboard.route)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = "Become Provider"
+                            )
+                        }
+                    },
+                    modifier = Modifier.clickable {
+                        // Update user to be a service provider
+                        authViewModel.updateUserProfile(isServiceProvider = true)
+                        // Navigate to provider dashboard
+                        navController.navigate(Screen.ProviderDashboard.route)
+                    }
+                )
+            }
             Divider(modifier = Modifier.padding(horizontal = 16.dp))
 
             // Help & Support
@@ -242,6 +318,7 @@ fun UserProfileScreen(
             // About
             ListItem(
                 headlineContent = { Text("About M-Joba") },
+                supportingContent = { Text("Version 1.0.0") },
                 leadingContent = {
                     Icon(
                         imageVector = Icons.Default.Info,
@@ -249,24 +326,71 @@ fun UserProfileScreen(
                     )
                 },
                 trailingContent = {
-                    IconButton(onClick = { /* TODO: Navigate to about screen */ }) {
+                    IconButton(onClick = {
+                        // Display an about dialog or navigate to about screen
+                        // For now, we'll just show a dialog through state
+                    }) {
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
                             contentDescription = "About"
                         )
                     }
                 },
-                modifier = Modifier.clickable { /* TODO: Navigate to about screen */ }
+                modifier = Modifier.clickable {
+                    // For demonstration, we could navigate to an about screen
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Developer Options (only in debug)
+            val isDebugMode = true // Set to false before production release
+
+            if (isDebugMode) {
+                Divider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                ListItem(
+                    headlineContent = { Text("Developer Options") },
+                    supportingContent = { Text("Debug tools and settings") },
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Default.Code,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingContent = {
+                        IconButton(onClick = {
+                            // Show developer options dialog
+                            showDevOptionsDialog = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = "Dev Options"
+                            )
+                        }
+                    },
+                    modifier = Modifier.clickable {
+                        // Show developer options dialog
+                        showDevOptionsDialog = true
+                    }
+                )
+            }
+
             // Logout button
             OutlinedButton(
-                onClick = { /* TODO: Implement logout */ },
+                onClick = {
+                    // Call the logout function from AuthViewModel
+                    authViewModel.logout()
+                    // Navigate back to login screen
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Logout,
@@ -279,6 +403,69 @@ fun UserProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        // Developer Options Dialog - outside the Column but inside the Scaffold padding
+        if (showDevOptionsDialog) {
+            val categoryViewModel: CategoryViewModel = viewModel()
+            val context = LocalContext.current
+
+            AlertDialog(
+                onDismissRequest = { showDevOptionsDialog = false },
+                title = { Text("Developer Options") },
+                text = {
+                    Column {
+                        Text("These options are for development and testing purposes only.")
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // First button - Reset and Initialize Categories
+                        Button(
+                            onClick = {
+                                categoryViewModel.resetAndInitializeCategories()
+                                Toast.makeText(context, "Initializing default categories...", Toast.LENGTH_SHORT).show()
+                                showDevOptionsDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Reset and Initialize Categories")
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Second button - Add Missing Categories
+                        Button(
+                            onClick = {
+                                categoryViewModel.initializeAllCategories() // Use the new function here
+                                Toast.makeText(context, "Adding missing categories...", Toast.LENGTH_SHORT).show()
+                                showDevOptionsDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Add Missing Categories")
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Third button - Enable Provider Mode
+                        Button(
+                            onClick = {
+                                authViewModel.updateUserProfile(isServiceProvider = true)
+                                Toast.makeText(context, "Enabled service provider mode", Toast.LENGTH_SHORT).show()
+                                showDevOptionsDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Enable Provider Mode")
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showDevOptionsDialog = false }) {
+                        Text("Close")
+                    }
+                }
+            )
         }
     }
 }
@@ -391,4 +578,3 @@ private fun getSampleUser(userId: String?): User {
         dateCreated = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000) // 30 days ago
     )
 }
-
