@@ -224,7 +224,7 @@ fun NearbyProvidersScreen(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Enter area (e.g. Kilimani, Nairobi)") },
+                            placeholder = { Text("Enter area ( Kilimani, Nairobi)") },
                             label = { Text("Search by location") },
                             leadingIcon = {
                                 Icon(
