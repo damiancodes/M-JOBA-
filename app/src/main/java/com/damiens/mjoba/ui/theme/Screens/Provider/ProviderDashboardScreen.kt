@@ -1152,84 +1152,84 @@ fun ServiceCard(
 
 
 
-    @Composable
-    fun ProfileActionItem(
-        icon: ImageVector,
-        title: String,
-        onClick: () -> Unit
+@Composable
+fun ProfileActionItem(
+    icon: ImageVector,
+    title: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary
+        )
 
-            Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
 
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
     }
+}
 
-    // Helper functions
-    private fun getStatusColor(status: BookingStatus): Color {
-        return when (status) {
-            BookingStatus.PENDING -> Color(0xFFFFA000)    // Amber
-            BookingStatus.CONFIRMED -> Color(0xFF2196F3)  // Blue
-            BookingStatus.IN_PROGRESS -> Color(0xFF9C27B0) // Purple
-            BookingStatus.COMPLETED -> Color(0xFF4CAF50)  // Green
-            BookingStatus.CANCELLED -> Color(0xFFF44336)  // Red
-            BookingStatus.REJECTED -> Color(0xFFF44336)   // Red
-        }
+// Helper functions
+private fun getStatusColor(status: BookingStatus): Color {
+    return when (status) {
+        BookingStatus.PENDING -> Color(0xFFFFA000)    // Amber
+        BookingStatus.CONFIRMED -> Color(0xFF2196F3)  // Blue
+        BookingStatus.IN_PROGRESS -> Color(0xFF9C27B0) // Purple
+        BookingStatus.COMPLETED -> Color(0xFF4CAF50)  // Green
+        BookingStatus.CANCELLED -> Color(0xFFF44336)  // Red
+        BookingStatus.REJECTED -> Color(0xFFF44336)   // Red
     }
+}
 
-    private fun countPendingBookings(bookingsState: UserBookingsUiState): Int {
-        return if (bookingsState is UserBookingsUiState.Success) {
-            bookingsState.bookings.count { it.status == BookingStatus.PENDING }
-        } else {
-            0
-        }
+private fun countPendingBookings(bookingsState: UserBookingsUiState): Int {
+    return if (bookingsState is UserBookingsUiState.Success) {
+        bookingsState.bookings.count { it.status == BookingStatus.PENDING }
+    } else {
+        0
     }
+}
 
-    private fun countCompletedBookings(bookingsState: UserBookingsUiState): Int {
-        return if (bookingsState is UserBookingsUiState.Success) {
-            bookingsState.bookings.count { it.status == BookingStatus.COMPLETED }
-        } else {
-            0
-        }
+private fun countCompletedBookings(bookingsState: UserBookingsUiState): Int {
+    return if (bookingsState is UserBookingsUiState.Success) {
+        bookingsState.bookings.count { it.status == BookingStatus.COMPLETED }
+    } else {
+        0
     }
+}
 
-    private fun countServices(servicesState: ServicesUiState): Int {
-        return if (servicesState is ServicesUiState.Success) {
-            servicesState.services.size
-        } else {
-            0
-        }
+private fun countServices(servicesState: ServicesUiState): Int {
+    return if (servicesState is ServicesUiState.Success) {
+        servicesState.services.size
+    } else {
+        0
     }
+}
 
-    private fun calculateRevenue(bookingsState: UserBookingsUiState): Int {
-        return if (bookingsState is UserBookingsUiState.Success) {
-            bookingsState.bookings
-                .filter { it.status == BookingStatus.COMPLETED }
-                .sumOf { it.totalAmount }
-                .toInt()
-        } else {
-            0
-        }
+private fun calculateRevenue(bookingsState: UserBookingsUiState): Int {
+    return if (bookingsState is UserBookingsUiState.Success) {
+        bookingsState.bookings
+            .filter { it.status == BookingStatus.COMPLETED }
+            .sumOf { it.totalAmount }
+            .toInt()
+    } else {
+        0
     }
+}

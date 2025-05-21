@@ -10,7 +10,7 @@ sealed class ServicesUiState {
     /**
      * Initial state before any data is loaded
      */
-//    object Initial : SservicesUiState()
+    object Initial : ServicesUiState() // ✅ Fixed typo: was "SservicesUiState()"
 
     /**
      * Loading state while data is being fetched
@@ -32,4 +32,3 @@ sealed class ServicesUiState {
      */
     data class Error(val message: String) : ServicesUiState()
 }
-
