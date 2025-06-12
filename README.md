@@ -11,7 +11,7 @@
   <img src="https://github.com/damiancodes/M-JOBA-/blob/master/app/src/main/res/drawable/home1.jpeg?raw=true" width="300" alt="MJOBA App Screenshot"/>
 </div>
 
-## 📱 Overview
+##  Overview
 
 MJOBA is a marketplace app that bridges the gap between urban Kenyan customers and local service providers. Operating in busy urban centers like Gikomba, Toi Market, Nairobi CBD, and Lavington, the app provides instant access to verified service professionals including:
 
@@ -77,7 +77,7 @@ MJOBA is a marketplace app that bridges the gap between urban Kenyan customers a
   </table>
 </div>
 
-## 💡 Key Features
+##  Key Features
 
 <div align="center">
   <table>
@@ -136,7 +136,7 @@ graph TD
     H --> I[View Dashboard Analytics]
 ```
 
-## 💰 Business Model
+##  Business Model
 
 <div align="center">
   <table>
@@ -159,7 +159,7 @@ graph TD
   </table>
 </div>
 
-## 🔒 Security Features
+##  Security Features
 
 - **Secure Payments**: M-Pesa integration with escrow functionality
 - **Identity Verification**: Multi-step provider verification process
@@ -192,7 +192,7 @@ MJOBA aims to digitize Kenya's informal economy by:
 - Advanced analytics for providers
 - Subscription tiers and premium features
 
-## 📋 Implementation Details
+##  Implementation Details
 
 ### Architecture
 MJOBA follows the MVVM (Model-View-ViewModel) architecture pattern:
@@ -226,7 +226,7 @@ app/
 - **Analytics**: Firebase Analytics
 - **Testing**: JUnit, Espresso, Mockito
 
-## 📱 Screen Showcase
+##  Screen Showcase
 
 <div align="center">
   <table>
@@ -261,7 +261,7 @@ app/
   </table>
 </div>
 
-## 🔍 Target Audience
+##  Target Audience
 
 ### Customers
 - Urban residents in Nairobi
@@ -273,7 +273,7 @@ app/
 - Small business owners
 - Individual service professionals
 
-## 📞 Contact & Support
+##  Contact & Support
 
 For technical support or feature requests:
 - Email: support@mjoba.com
