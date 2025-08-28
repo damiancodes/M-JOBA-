@@ -8,7 +8,7 @@
   
   <p>Connecting urban Kenyans with verified local service providers</p>
   
-  <img src="https://github.com/damiancodes/M-JOBA-/blob/master/app/src/main/res/drawable/home1.jpeg?raw=true" width="300" alt="MJOBA App Screenshot"/>
+ <img src="https://res.cloudinary.com/dzs0hdqhd/image/upload/v1756406369/home7888_xjefjt.jpg" width="300" alt="MJOBA App Screenshot"/>
 </div>
 
 ##  Overview
